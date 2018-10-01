@@ -27,7 +27,8 @@ suites:
     attributes:
       ma2:
         aib:
-          dir: /tmp/test
+          file: /tmp/test/chef-automate-airgap.aib
+        chef-automate: /tmp/test/chef-automate
     verifier:
       inspec_tests:
         - test/integration/default

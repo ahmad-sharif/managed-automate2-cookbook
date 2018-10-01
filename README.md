@@ -6,11 +6,11 @@ Deploys and configures the Chef Automate 2 server in an airgapped, stateless mod
 
 ## default ##
 
-Installs Chef Automate on a single airgapped box in a new deployment. The AIB file may be a URL or a file. The license may be referred as a URL or a string in an attribute.
+Installs Chef Automate on a single airgapped box in a new deployment. The AIB file may be provided by a URL or a file path. The path to the chef-automate command needs to be provided (the `airgap_bundle` recipe can download it if necessary). The license may be referred as a URL file or a string in an attribute.
 
 ## airgap_bundle ##
 
-This recipe requires internet access and is used to create an airgap installation bundle from the "current" release channel. We will be able to use this same recipe to generate bundles that may be used for upgrades eventually.
+This recipe requires internet access and is used to create an airgap installation bundle (AIB file) from the "current" release channel. We will be able to use this same recipe to generate bundles that may be used for upgrades eventually. The recipe downloads an AIB file and the `chef-automate` command and copies them to the `node['ma2']['aib']['dir']` which may be used as the source for other recipes.
 
 ## backup
 

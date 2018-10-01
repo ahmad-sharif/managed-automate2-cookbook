@@ -3,24 +3,50 @@
 # Recipe:: default
 #
 
-fcp = Chef::Config[:file_cache_path]
-aibdir = node['ma2']['aib']['dir']
-aibfile = aibdir + '/' + node['ma2']['aib']['file']
-aibchef = aibdir + '/chef-automate'
-licensefile = fcp + '/automate.license'
+a2user = node['ma2']['user']
+a2dir = '/home/' + a2user
+a2aibfile = a2dir + '/chef-automate-airgap.aib'
+a2chef = a2dir + '/chef-automate'
+licensefile = a2dir + '/automate.license'
 
-# if the aib file is not there download it
-unless node['ma2']['aib']['url'].nil?
-  remote_file aibfile do
-    source node['ma2']['aib']['url']
-    not_if { ::File.exist?(aibfile) }
+# manage Automate with its own user
+user a2user do
+  manage_home true
+  shell '/bin/false'
+  system true
+end
+
+# copy over the local file or download it
+if node['ma2']['aib']['url'].nil?
+  execute "cp #{node['ma2']['aib']['file']} #{a2aibfile}" do
+    not_if { ::File.exist?(a2aibfile) }
   end
+else
+  remote_file a2aibfile do
+    source node['ma2']['aib']['url']
+    not_if { ::File.exist?(a2aibfile) }
+  end
+end
+
+file a2aibfile do
+  owner a2user
+end
+
+# local copy of chef-automate
+execute "cp #{node['ma2']['chef-automate']} #{a2chef}" do
+  not_if { ::File.exist?(a2chef) }
+end
+
+file a2chef do
+  mode '0755'
+  owner a2user
 end
 
 # get the license from a URL
 unless node['ma2']['license']['url'].nil?
   remote_file licensefile do
     source node['ma2']['license']['url']
+    owner a2user
     not_if { ::File.exist?(licensefile) }
   end
 end
@@ -29,6 +55,7 @@ end
 unless node['ma2']['license']['string'].nil?
   file licensefile do
     content node['ma2']['license']['string']
+    owner a2user
     sensitive true
     not_if { ::File.exist?(licensefile) }
   end
@@ -85,26 +112,26 @@ sysctl_param 'vm.dirty_expire_centisecs' do
 end
 
 # Verify the installation is ready to run Automate 2
-execute "#{aibchef} preflight-check --airgap" do
-  not_if { ::File.exist?("#{fcp}/config.toml") }
+execute "#{a2chef} preflight-check --airgap" do
+  not_if { ::File.exist?("#{a2dir}/config.toml") }
 end
 
 # create default configuration
-execute "#{aibchef} init-config --upgrade-strategy none" do
-  cwd fcp
-  not_if { ::File.exist?("#{fcp}/config.toml") }
+execute "#{a2chef} init-config --upgrade-strategy none" do
+  cwd a2dir
+  not_if { ::File.exist?("#{a2dir}/config.toml") }
 end
 
 # deploy chef automate
 execute 'chef-automate deploy' do
-  command "#{aibchef} deploy config.toml --accept-terms-and-mlsa --skip-preflight --airgap-bundle #{aibfile}"
-  cwd fcp
-  not_if { ::File.exist?("#{fcp}/automate-credentials.toml") }
+  command "#{a2chef} deploy config.toml --accept-terms-and-mlsa --skip-preflight --airgap-bundle #{a2aibfile}"
+  cwd a2dir
+  not_if { ::File.exist?("#{a2dir}/automate-credentials.toml") }
 end
 
 execute 'chef-automate license apply' do
-  command "#{aibchef} license apply #{licensefile}"
-  not_if "#{aibchef} license status | grep '^License ID'"
+  command "#{a2chef} license apply #{licensefile}"
+  not_if "#{a2chef} license status | grep '^License ID'"
 end
 
 # should we push the contents of automate-credentials.toml into an attribute or

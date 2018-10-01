@@ -10,7 +10,7 @@ fcp = Chef::Config[:file_cache_path]
 fcpfile = fcp + '/' + node['ma2']['aib']['file']
 fcpchef = fcp + '/chef-automate'
 aibdir = node['ma2']['aib']['dir']
-aibfile = aibdir + '/' + node['ma2']['aib']['file']
+aibfile = aibdir + '/' + node['ma2']['aib']['file_name']
 aibchef = aibdir + '/chef-automate'
 
 remote_file "#{fcp}/chef-automate_linux_amd64.zip" do

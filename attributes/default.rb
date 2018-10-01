@@ -17,14 +17,21 @@
 # limitations under the License.
 #
 
-# airgap_bundle
+# airgap_bundle recipe
 # set location to copy the airgap installation bundle and chef-automate command
 default['ma2']['aib']['dir'] = Chef::Config[:file_cache_path]
-default['ma2']['aib']['file'] = 'chef-automate-airgap.aib'
+# path to the AIB file to be saved in the aib recipe and used in the default
+default['ma2']['aib']['file_name'] = 'chef-automate-airgap.aib'
+
+# default recipe
+# non-root user for Chef Automate
+default['ma2']['user'] = 'chefautomate'
+# provide the file path or URL for the AIB file
+default['ma2']['aib']['file'] = node['ma2']['aib']['dir'] + '/' + node['ma2']['aib']['file_name']
 default['ma2']['aib']['url'] = nil
 
 # set location of the chef-automate CLI
-default['ma2']['cli_path'] = Chef::Config[:file_cache_path]
+default['ma2']['chef-automate'] = node['ma2']['aib']['dir'] + '/chef-automate'
 
 # sysctl settings to apply to make the preflight-check pass
 default['ma2']['sysctl']['fs.file-max'] = 64000
